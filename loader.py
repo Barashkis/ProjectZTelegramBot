@@ -18,7 +18,7 @@ def auth():
     options.add_argument('--start-maximized')
     options.add_argument(f"user-agent={UserAgent().random}")
 
-    s = Service(executable_path=r"D:\Программирование на Python\practice\cam-program\chromedriver.exe")
+    s = Service(executable_path=getenv("executable_path"))
 
     driver = webdriver.Chrome(options=options, service=s)
 
