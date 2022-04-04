@@ -29,7 +29,7 @@ async def get_screenshot(dp: Dispatcher, driver: webdriver, project_id: int):
                     total_height = ele.size["height"] + 1000
 
                     driver.set_window_size(1920, total_height)
-                    screenshot_path = rf"screenshots\{all_projects[project_id]}.png"
+                    screenshot_path = f"screenshots/{all_projects[project_id]}.png"
                     ele.screenshot(screenshot_path)
 
                     return screenshot_path
