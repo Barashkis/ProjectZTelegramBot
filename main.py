@@ -1,3 +1,4 @@
+from aiogram.types import Update
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 
@@ -46,7 +47,12 @@ async def get_screenshot(dp: Dispatcher, driver: webdriver, project_id: int):
 async def get_data(dp: Dispatcher, driver: webdriver):
     state = dp.current_state()
     data = await state.get_data()
-    user_id = data["user_id"]
+    user_id = data.get("user_id")
+
+    if user_id is None:
+        await state.update_data({
+            "user_id": Update.get_current().message.from_user.id
+        })
 
     try:
         driver.get("https://zvezda.cam-program.ru/category/raschet-trudoemkosti/")
@@ -65,6 +71,10 @@ async def get_data(dp: Dispatcher, driver: webdriver):
                 break
             else:
                 previous.click()
+
+        await state.update_data({
+            "all_projects": index_dict
+        })
 
         return index_dict
     except Exception as _ex:
