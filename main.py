@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from aiogram.types import Update
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 
@@ -32,7 +31,7 @@ async def get_screenshot(dp: Dispatcher, driver: webdriver, project_id: int):
                     total_height = ele.size["height"] + 1000
 
                     driver.set_window_size(1920, total_height)
-                    screenshot_path = f"{Path('screenshots', all_projects[project_id] + '.png')}"
+                    screenshot_path = str(Path(Path().resolve(), all_projects[project_id] + ".png"))
                     ele.screenshot(screenshot_path)
 
                     return screenshot_path
@@ -49,12 +48,7 @@ async def get_screenshot(dp: Dispatcher, driver: webdriver, project_id: int):
 async def get_data(dp: Dispatcher, driver: webdriver):
     state = dp.current_state()
     data = await state.get_data()
-    user_id = data.get("user_id")
-
-    if user_id is None:
-        await state.update_data({
-            "user_id": Update.get_current().message.from_user.id
-        })
+    user_id = data["user_id"]
 
     try:
         driver.get("https://zvezda.cam-program.ru/category/raschet-trudoemkosti/")
