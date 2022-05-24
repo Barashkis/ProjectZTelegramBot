@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from fake_useragent import UserAgent
 
-from loader import dp, bot
+from loader import dp
 
 from dotenv import load_dotenv
 
@@ -51,10 +51,13 @@ async def auth():
         password_input.send_keys(os.getenv("password"))
 
         driver.find_element(By.CLASS_NAME, "fa-sign-in").click()
-
-        return driver
     except Exception as _ex:
-        bot.send_message(user_id, "Что-то пошло не так... Пожалуйста, повторите попытку позже")
+        driver.close()
+        driver.quit()
+
+        return
+    else:
+        return driver
 
 
 @dp.message_handler(Text(equals="Посмотреть проекты"))
@@ -62,15 +65,20 @@ async def choose_project_id(message: types.Message):
     await message.answer("Извлекаю информацию о всех проектах...")
 
     auth_driver = await auth()
-    all_projects = await get_data(dp, auth_driver)
-    auth_driver.close()
-    auth_driver.quit()
 
-    await message.answer("Текущий список проектов")
-    await message.answer("\n".join([f"{item[0]}. {item[1]}" for item in all_projects.items()]))
-    await message.answer("Введите номер проекта, информацию о котором Вы хотите получить")
+    try:
+        all_projects = await get_data(dp, auth_driver)
 
-    await SpecifyProject.custom.set()
+        await message.answer("\n".join([f"{item[0]}. {item[1]}" for item in all_projects.items()]))
+        await message.answer("Введите номер проекта, информацию о котором Вы хотите получить")
+
+        await SpecifyProject.custom.set()
+    except Exception:
+        await message.answer("Что-то пошло не так... Пожалуйста, повторите попытку позже")
+    finally:
+        if auth_driver is not None:
+            auth_driver.close()
+            auth_driver.quit()
 
 
 @dp.message_handler(state=SpecifyProject.custom)
@@ -80,7 +88,6 @@ async def send_project_info(message: types.Message, state: FSMContext):
 
     data = await state.get_data()
     all_projects = data["all_projects"]
-    user_id = data["user_id"]
 
     await SpecifyProject.custom.set()
     if not (1 <= project_id <= len(all_projects)):
@@ -90,9 +97,15 @@ async def send_project_info(message: types.Message, state: FSMContext):
     await message.answer("Подождите, это займет несколько секунд")
 
     auth_driver = await auth()
-    path = await get_screenshot(dp, auth_driver, project_id)
-    auth_driver.close()
-    auth_driver.quit()
 
-    await bot.send_document(chat_id=user_id, document=open(path, "rb+"))
-    os.remove(path)
+    try:
+        path = await get_screenshot(dp, auth_driver, project_id)
+
+        await message.answer_document(document=open(path, "rb+"))
+        os.remove(path)
+    except Exception:
+        await message.answer("Что-то пошло не так... Пожалуйста, повторите попытку позже")
+    finally:
+        if auth_driver is not None:
+            auth_driver.close()
+            auth_driver.quit()
