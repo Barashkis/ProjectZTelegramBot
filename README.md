@@ -8,3 +8,7 @@ This project uses Python libraries (version 3.8) such as:
 + selenium
 + aiogram
 + etc
+
+# Demonstration
+![Alt Text](assets/demonstration_1.png)
+![Alt Text](assets/demonstration_2.png)
