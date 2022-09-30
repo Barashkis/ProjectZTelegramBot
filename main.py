@@ -6,7 +6,7 @@ from selenium import webdriver
 from aiogram import Dispatcher
 
 
-async def get_screenshot(dp: Dispatcher, driver: webdriver, project_id: int):
+async def get_screenshot(dp: Dispatcher, driver: webdriver.Chrome, project_id: int) -> str:
     state = dp.current_state()
     data = await state.get_data()
     all_projects = data["all_projects"]
