@@ -39,19 +39,20 @@ async def get_screenshot(dp: Dispatcher, driver: webdriver.Chrome, project_id: i
             previous.click()
 
 
-async def get_data(dp: Dispatcher, driver: webdriver):
+async def get_data(dp: Dispatcher, driver: webdriver.Chrome) -> dict:
     state = dp.current_state()
 
     driver.get("https://zvezda.cam-program.ru/category/raschet-trudoemkosti/")
 
-    index_dict = {}
+    all_projects = {}
     count = 0
     while True:
         cards = driver.find_elements(By.CLASS_NAME, "category-raschet-trudoemkosti")[1:]
         for card in cards:
             count += 1
             title = card.find_element(By.TAG_NAME, "a").get_attribute("title")
-            index_dict[count] = title
+            all_projects[count] = title
+
         try:
             previous = driver.find_element(By.XPATH, "//*[@id=\"content\"]/ul/li[1]/a")
         except Exception:
@@ -60,7 +61,7 @@ async def get_data(dp: Dispatcher, driver: webdriver):
             previous.click()
 
     await state.update_data({
-        "all_projects": index_dict
+        "all_projects": all_projects
     })
 
-    return index_dict
+    return all_projects
