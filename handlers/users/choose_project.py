@@ -16,7 +16,6 @@ from typing import Optional
 from loader import dp
 
 from main import get_data, get_screenshot
-from states import SpecifyProject
 
 
 async def get_auth_driver() -> Optional[webdriver.Chrome]:
@@ -60,38 +59,37 @@ async def get_auth_driver() -> Optional[webdriver.Chrome]:
 
 
 @dp.message_handler(Text(equals="Посмотреть проекты"))
-async def choose_project_id(message: types.Message):
+async def choose_project_id(message: types.Message, state: FSMContext):
     await message.answer("Извлекаю информацию о всех проектах...")
 
     auth_driver = await get_auth_driver()
 
     try:
-        all_projects = await get_data(dp, auth_driver)
+        all_projects = await get_data(auth_driver)
     except Exception:
         await message.answer("Что-то пошло не так... Пожалуйста, повторите попытку позже")
     else:
         await message.answer("\n".join([f"{item[0]}. {item[1]}" for item in all_projects.items()]))
         await message.answer("Введите номер проекта, информацию о котором Вы хотите получить")
 
-        await SpecifyProject.custom.set()
+        await state.set_state("specify_project")
+        await state.update_data({
+            "all_projects": all_projects
+        })
     finally:
         if auth_driver is not None:
             auth_driver.close()
             auth_driver.quit()
 
 
-@dp.message_handler(state=SpecifyProject.custom)
+@dp.message_handler(state="specify_project")
 async def send_project_info(message: types.Message, state: FSMContext):
     project_id = int(message.text)
-    await state.reset_state(with_data=False)
 
     data = await state.get_data()
     all_projects = data["all_projects"]
-
-    await SpecifyProject.custom.set()
     if not (1 <= project_id <= len(all_projects)):
         raise ValueError
-    await state.reset_state(with_data=False)
 
     await message.answer("Подождите, это займет несколько секунд")
 
@@ -108,3 +106,5 @@ async def send_project_info(message: types.Message, state: FSMContext):
         if auth_driver is not None:
             auth_driver.close()
             auth_driver.quit()
+
+        await state.finish()

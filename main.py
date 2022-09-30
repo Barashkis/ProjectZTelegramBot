@@ -39,9 +39,7 @@ async def get_screenshot(dp: Dispatcher, driver: webdriver.Chrome, project_id: i
             previous.click()
 
 
-async def get_data(dp: Dispatcher, driver: webdriver.Chrome) -> dict:
-    state = dp.current_state()
-
+async def get_data(driver: webdriver.Chrome) -> dict:
     driver.get("https://zvezda.cam-program.ru/category/raschet-trudoemkosti/")
 
     all_projects = {}
@@ -59,9 +57,5 @@ async def get_data(dp: Dispatcher, driver: webdriver.Chrome) -> dict:
             break
         else:
             previous.click()
-
-    await state.update_data({
-        "all_projects": all_projects
-    })
 
     return all_projects
